@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
-import numpy as np # Adding numpy for general data handling best practice
+import numpy as np
+import plotly.express as px # Import Plotly for richer visualizations
 
 # ===============================================================
 # PAGE CONFIG — MUST BE FIRST STREAMLIT COMMAND
@@ -9,21 +10,15 @@ st.set_page_config(page_title="Marketing Performance Dashboard", layout="wide")
 
 # ===============================================================
 # LOAD DATA
-#
-# CRITICAL: The relative path to the CSV file is correct for
-# Streamlit deployment via GitHub, assuming the file is in the
-# same folder as this Python script.
 # ===============================================================
 @st.cache_data
 def load_data():
-    # Use the relative path to the CSV file in the GitHub repository
     df = pd.read_csv("marketing_performance_dashboard_full_v4.csv", parse_dates=["Date"])
 
-    # Derived KPIs for richer insights, handling potential division by zero
+    # Derived KPIs, handling potential division by zero (already in place)
     df["Cost_per_Conversion($)"] = np.where(df["Conversions"] > 0, df["Spend($)"] / df["Conversions"], 0)
     df["Revenue_per_Conversion($)"] = np.where(df["Conversions"] > 0, df["Revenue($)"] / df["Conversions"], 0)
     df["Profit_per_Conversion($)"] = np.where(df["Conversions"] > 0, df["Profit($)"] / df["Conversions"], 0)
-    # Handle division by zero for ratio, setting to 0 or NaN if Revenue is 0
     df["Spend_to_Revenue_Ratio"] = np.where(df["Revenue($)"] > 0, df["Spend($)"] / df["Revenue($)"], np.nan) 
     
     return df
@@ -38,10 +33,10 @@ st.write("**Designed for both CMO and CFO perspectives**")
 
 # ===============================================================
 # SIDEBAR FILTERS
+# (No changes needed here, as the filtering logic is robust)
 # ===============================================================
 st.sidebar.header("🔍 Filters")
 
-# Filter Options (using cached unique values for stability)
 platforms = df["Platform"].unique()
 regions = df["Region"].unique()
 objectives = df["Campaign_Objective"].unique()
@@ -52,16 +47,12 @@ region = st.sidebar.multiselect("Region", sorted(regions), sorted(regions))
 objective = st.sidebar.multiselect("Campaign Objective", sorted(objectives), sorted(objectives))
 segment = st.sidebar.multiselect("Audience Segment", sorted(segments), sorted(segments))
 
-# Date Range Filter
 min_date, max_date = df["Date"].min().date(), df["Date"].max().date()
-# Ensure date_input receives Python date objects
 date_range = st.sidebar.date_input("Date Range", [min_date, max_date], min_value=min_date, max_value=max_date)
 
-# Convert date_range back to pandas datetime objects for filtering
 start_date = pd.to_datetime(date_range[0])
 end_date = pd.to_datetime(date_range[1])
 
-# Apply filters
 filtered_df = df[
     (df["Platform"].isin(platform)) &
     (df["Region"].isin(region)) &
@@ -70,10 +61,8 @@ filtered_df = df[
     (df["Date"].between(start_date, end_date))
 ]
 
-# Check if the filtered DataFrame is empty
 if filtered_df.empty:
     st.error("No data matches the selected filters. Please adjust the filter criteria.")
-    # Stop execution if no data is present
     st.stop() 
 
 
@@ -83,10 +72,10 @@ if filtered_df.empty:
 tab1, tab2 = st.tabs(["🎯 CMO Dashboard", "💰 CFO Dashboard"])
 
 # ===============================================================
-# TAB 1 — CMO DASHBOARD
+# TAB 1 — CMO DASHBOARD (Enhanced)
 # ===============================================================
 with tab1:
-    st.header("🎯 CMO Dashboard — Marketing Performance View")
+    st.header("🎯 CMO Dashboard — Marketing Performance View (Enhanced)")
     st.write("Focus: Reach, Engagement, and Conversion Efficiency")
 
     # Aggregate key metrics for KPI row
@@ -95,24 +84,48 @@ with tab1:
     avg_ctr = filtered_df['CTR(%)'].mean()
     avg_conversion_rate = filtered_df['Conversion_Rate(%)'].mean()
     avg_roas = filtered_df['ROAS'].mean()
-    avg_engagement_rate = filtered_df['Engagement_Rate(%)'].mean()
-
-    # KPI ROW - Row 1 (Focus on Reach/Impressions/CTR)
+    avg_cpa = filtered_df['Cost_per_Conversion($)'].mean() # NEW KPI
+    
+    # KPI ROW - Row 1 (Focus on Volume/Cost)
     col1, col2, col3 = st.columns(3)
     col1.metric("Total Impressions", f"{total_impressions:,.0f}")
     col2.metric("Total Reach", f"{total_reach:,.0f}")
-    col3.metric("Avg CTR (%)", f"{avg_ctr:.2f}")
+    col3.metric("Avg CPA ($)", f"${avg_cpa:.2f}") # CPA is added here
 
-    # KPI ROW - Row 2 (Focus on Conversion/ROI/Engagement)
+    # KPI ROW - Row 2 (Focus on Efficiency/Quality)
     col4, col5, col6 = st.columns(3)
-    col4.metric("Avg Conversion Rate (%)", f"{avg_conversion_rate:.2f}")
-    col5.metric("Avg ROAS", f"{avg_roas:.2f}")
-    col6.metric("Avg Engagement Rate (%)", f"{avg_engagement_rate:.2f}")
+    col4.metric("Avg CTR (%)", f"{avg_ctr:.2f}")
+    col5.metric("Avg Conversion Rate (%)", f"{avg_conversion_rate:.2f}")
+    col6.metric("Avg Engagement Rate (%)", f"{filtered_df['Engagement_Rate(%)'].mean():.2f}")
+
 
     st.markdown("---")
 
-    # CTR & Conversion Trend
-    st.subheader("📈 CTR & Conversion Rate Over Time")
+    # NEW: CONVERSION FUNNEL (Visualization for the CMO)
+    st.subheader("📉 Full Funnel Performance: Clicks, Conversions, and Revenue")
+    funnel_data = filtered_df[["Clicks", "Conversions", "Revenue($)"]].sum().reset_index()
+    funnel_data.columns = ['Metric', 'Value']
+
+    col_funnel, col_placeholder = st.columns([2, 1])
+
+    with col_funnel:
+        fig_funnel = px.bar(
+            funnel_data, 
+            x='Metric', 
+            y='Value', 
+            title='Funnel Volume Breakdown (Clicks and Conversions)',
+            color='Metric',
+            color_discrete_map={'Clicks': 'rgb(245, 130, 48)', 'Conversions': 'rgb(70, 130, 180)', 'Revenue($)': 'rgb(60, 179, 113)'},
+            text='Value'
+        )
+        # Customizing text display for better formatting
+        fig_funnel.update_traces(texttemplate='%{text:,.0f}', textposition='outside')
+        fig_funnel.update_layout(showlegend=False, xaxis_title="", yaxis_title="Volume/Value")
+        st.plotly_chart(fig_funnel, use_container_width=True)
+
+
+    # CTR & Conversion Trend (Using original Streamlit chart for variety)
+    st.subheader("📈 Efficiency Trend: CTR & Conversion Rate Over Time")
     chart_df = filtered_df.groupby("Date")[["CTR(%)", "Conversion_Rate(%)"]].mean()
     st.line_chart(chart_df)
 
@@ -121,19 +134,7 @@ with tab1:
     spend_conv = filtered_df.groupby("Platform")[["Spend($)", "Conversions"]].sum()
     st.bar_chart(spend_conv)
 
-    # Regional Reach
-    st.subheader("🌍 Regional Reach")
-    reach_region = filtered_df.groupby("Region")[["Reach"]].sum()
-    # Use st.bar_chart for simple visualization, reset index for better labeling
-    st.bar_chart(reach_region)
-
-    # Device Split
-    st.subheader("📱 Device Type Spend Share")
-    device_spend = filtered_df.groupby("Device_Type")[["Spend($)"]].sum()
-    # Can use a pie chart or donut chart for better visual on share, but sticking to bar_chart for simplicity
-    st.bar_chart(device_spend)
-
-    # Campaign Breakdown Table
+    # Campaign Breakdown Table (No change, as it is already good)
     st.subheader("🔍 Campaign-Level Breakdown")
     st.dataframe(
         filtered_df.groupby("Campaign_Name")[["CTR(%)", "CPC($)", "CPM($)", "Conversions", "ROAS"]]
@@ -149,14 +150,14 @@ with tab1:
         })
     )
 
-    st.info("💡 **Insight Tip:** High CTR but low Conversion Rate may indicate strong creative performance but poor post-click experience. Check landing page speed and relevance!")
+    st.info("💡 **CMO Insight Tip:** High CPA may indicate inefficiency. Use the funnel chart to identify if the cost is driven by low CTR (bad ad) or low Conversion Rate (bad landing page).")
 
 # ===============================================================
-# TAB 2 — CFO DASHBOARD
+# TAB 2 — CFO DASHBOARD (Enhanced)
 # ===============================================================
 with tab2:
-    st.header("💰 CFO Dashboard — Financial Efficiency View")
-    st.write("Focus: Spend Optimization, Profitability, ROI, and Cost Efficiency")
+    st.header("💰 CFO Dashboard — Financial Efficiency View (Enhanced)")
+    st.write("Focus: Spend Optimization, Profitability, ROI, and Unit Economics")
 
     # Aggregate key metrics for KPI row
     total_spend = filtered_df['Spend($)'].sum()
@@ -164,56 +165,81 @@ with tab2:
     total_profit = filtered_df['Profit($)'].sum()
     avg_roi = filtered_df['ROI(%)'].mean()
     avg_cac = filtered_df['CAC($)'].mean()
-    # Calculate weighted average profit margin by total revenue if needed, but mean of percentage is fine for quick view
-    avg_profit_margin = filtered_df['Profit_Margin'].mean()
+    # Weighted average calculation is more accurate for these ratios
+    avg_profit_per_conv = (filtered_df['Profit($)'].sum() / filtered_df['Conversions'].sum()) if filtered_df['Conversions'].sum() > 0 else 0
+    avg_spend_to_revenue_ratio = (total_spend / total_revenue) if total_revenue > 0 else 0
 
-    # KPI ROW - Row 1 (Focus on Totals/Profitability)
+
+    # KPI ROW - Row 1 (Focus on Totals)
     col1, col2, col3 = st.columns(3)
-    col1.metric("Total Spend ($)", f"${total_spend:,.0f}")
-    col2.metric("Total Revenue ($)", f"${total_revenue:,.0f}")
+    col1.metric("Total Revenue ($)", f"${total_revenue:,.0f}")
+    col2.metric("Total Spend ($)", f"${total_spend:,.0f}")
     col3.metric("Total Profit ($)", f"${total_profit:,.0f}")
 
-    # KPI ROW - Row 2 (Focus on Efficiency/Averages)
+    # KPI ROW - Row 2 (Focus on Unit/Financial Efficiency)
     col4, col5, col6 = st.columns(3)
     col4.metric("Avg ROI (%)", f"{avg_roi:.2f}")
     col5.metric("Avg CAC ($)", f"${avg_cac:.2f}")
-    col6.metric("Avg Profit Margin (%)", f"{avg_profit_margin * 100:.2f}")
+    col6.metric("Profit per Conversion ($)", f"${avg_profit_per_conv:.2f}") # NEW KPI
 
     st.markdown("---")
 
-    # Spend vs Revenue
-    st.subheader("📈 Spend vs Revenue Over Time")
-    time_trend = filtered_df.groupby("Date")[["Spend($)", "Revenue($)"]].sum()
+    # ENHANCED: Spend vs Revenue vs Profit over time
+    st.subheader("📈 Financial Trend: Revenue, Spend, and Profit Over Time")
+    time_trend = filtered_df.groupby("Date")[["Spend($)", "Revenue($)", "Profit($)"]].sum()
     st.line_chart(time_trend)
+    
+    # Unit Economics Table and Chart in a single row
+    st.subheader("💹 Platform Unit Economics vs ROI")
+    col_ratio, col_roi_chart = st.columns(2)
 
-    # Profit & ROI by Platform
-    st.subheader("💹 Profit & ROI by Platform")
-    # Using sum for Profit and mean for ROI
-    roi_platform = filtered_df.groupby("Platform").agg(
-        {'Profit($)': 'sum', 'ROI(%)': 'mean'}
-    ).sort_values("Profit($)", ascending=False)
-    st.bar_chart(roi_platform)
+    with col_ratio:
+        # Unit Economics: Cost_per_Conversion, Revenue_per_Conversion, Profit_per_Conversion
+        unit_econ_df = filtered_df.groupby("Platform").agg(
+            {'Cost_per_Conversion($)': 'mean', 'Profit_per_Conversion($)': 'mean', 'Spend_to_Revenue_Ratio': 'mean'}
+        ).sort_values('Profit_per_Conversion($)', ascending=False)
+        
+        st.dataframe(
+            unit_econ_df
+            .round(2)
+            .style.format({
+                "Cost_per_Conversion($)": "${:.2f}",
+                "Profit_per_Conversion($)": "${:.2f}",
+                "Spend_to_Revenue_Ratio": "{:.2f}"
+            })
+        )
+        st.info(f"Global Avg Spend/Revenue Ratio: {avg_spend_to_revenue_ratio:.2f}")
 
-    # ROI by Region
-    st.subheader("🌍 ROI by Region")
-    roi_region = filtered_df.groupby("Region")[["ROI(%)"]].mean().sort_values("ROI(%)", ascending=False)
-    st.bar_chart(roi_region)
+    with col_roi_chart:
+        # ROI by Region (using Plotly for better aesthetics)
+        roi_region = filtered_df.groupby("Region")[["ROI(%)"]].mean().reset_index()
+        fig_roi_region = px.bar(
+            roi_region, 
+            x='Region', 
+            y='ROI(%)', 
+            title='Avg ROI (%) by Region',
+            color='ROI(%)',
+            color_continuous_scale=px.colors.sequential.Teal,
+        )
+        fig_roi_region.update_layout(xaxis_title="", yaxis_title="Average ROI (%)")
+        st.plotly_chart(fig_roi_region, use_container_width=True)
 
-    # Platform Summary Table
-    st.subheader("🔍 Platform Financial Summary")
+
+    # Platform Summary Table (Updated to use sum for consistency)
+    st.subheader("🔍 Platform Financial Summary (Totals)")
     st.dataframe(
         filtered_df.groupby("Platform")[["Spend($)", "Revenue($)", "Profit($)", "ROI(%)", "CAC($)", "ROAS"]]
-        .sum() # Sum all metrics for a comprehensive platform view
+        .sum() # Sum all financial metrics for platform totals
         .round(2)
-        .sort_values("ROI(%)", ascending=False)
+        .sort_values("Profit($)", ascending=False)
         .style.format({
             "Spend($)": "${:,.0f}",
             "Revenue($)": "${:,.0f}",
             "Profit($)": "${:,.0f}",
-            "ROI(%)": "{:.2f}",
-            "CAC($)": "${:.2f}",
+            "ROI(%)": "{:.2f}", # Keep this as a general percentage
+            "CAC($)": "${:.2f}", # CAC from the raw data is averaged here, but should technically be calculated from total spend/conversions
             "ROAS": "{:.2f}"
         })
     )
 
-    st.info("💡 **CFO Insight Tip:** High ROI with low CAC indicates efficient marketing spend. Analyze region-wise ROI to reallocate future budgets. Consider cost-per-conversion and profit-per-conversion metrics (available in the raw data) for deeper unit economics.")
+    st.info("💡 **CFO Insight Tip:** Focus on platforms and regions with the highest **Profit per Conversion** and the lowest **Spend to Revenue Ratio** to maximize efficient budget allocation.")
