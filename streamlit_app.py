@@ -920,7 +920,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-
+# Fixed footer: ensure only one top-level markdown + caption (removed duplicated indented lines)
+st.markdown("---")
+st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     
-    st.markdown("---")
-    st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
