@@ -78,7 +78,7 @@ st.markdown("""
 # ===============================================================
 @st.cache_data
 def load_data():
-    df = pd.read_csv("marketing_performance_dashboard_full_v4.csv", parse_dates=["Date"])
+    df = pd.read_csv("marketing_performance_dashboard_realistic_v5.csv", parse_dates=["Date"])
     
     # Ensure all numeric calculations are safe
     df["Cost_per_Conversion($)"] = np.where(
