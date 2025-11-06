@@ -328,28 +328,33 @@ with tab_exec:
     st.plotly_chart(fig_radar, use_container_width=True)
     
     # Key insights
-    st.subheader("💡 Key Insights")
-    
-    best_platform = platform_metrics.sort_values('Profit($)', ascending=False).index[0]
-    best_profit = platform_metrics.loc[best_platform, 'Profit($)']
-    best_roas = platform_metrics.loc[best_platform, 'ROAS']
-    
-    worst_platform = platform_metrics.sort_values('Profit($)', ascending=True).index[0]
-    worst_profit = platform_metrics.loc[worst_platform, 'Profit($)']
-    
-    st.markdown(f"""
-    <div class="insight-box">
-    <strong>✅ Best Performing Platform:</strong> {best_platform} generated <strong>{format_large_number(best_profit)}</strong> 
-    in profit with a ROAS of <strong>{best_roas:.2f}x</strong>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown(f"""
-    <div class="warning-box">
-    <strong>⚠️ Attention Required:</strong> {worst_platform} generated only <strong>{format_large_number(worst_profit)}</strong> 
-    in profit. Consider budget reallocation or campaign optimization.
-    </div>
-    """, unsafe_allow_html=True)
+st.subheader("💡 Key Insights")
+
+best_platform = platform_metrics.sort_values('Profit($)', ascending=False).index[0]
+best_profit = platform_metrics.loc[best_platform, 'Profit($)']
+best_roas = platform_metrics.loc[best_platform, 'ROAS']
+
+worst_platform = platform_metrics.sort_values('Profit($)', ascending=True).index[0]
+worst_profit = platform_metrics.loc[worst_platform, 'Profit($)']
+
+st.markdown(f"""
+<div class="insight-box" style="background-color:rgba(33,150,243,0.15);color:var(--text-color,#fff);">
+<strong style="color:#00bcd4;">✅ Best Performing Platform:</strong> 
+<span style="color:inherit;">{best_platform} generated 
+<strong style="color:#00e676;">{format_large_number(best_profit)}</strong> in profit 
+with a ROAS of <strong style="color:#00e676;">{best_roas:.2f}x</strong>.</span>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown(f"""
+<div class="warning-box" style="background-color:rgba(255,193,7,0.15);color:var(--text-color,#fff);">
+<strong style="color:#ffca28;">⚠️ Attention Required:</strong> 
+<span style="color:inherit;">{worst_platform} generated only 
+<strong style="color:#ff7043;">{format_large_number(worst_profit)}</strong> in profit. 
+Consider budget reallocation or campaign optimization.</span>
+</div>
+""", unsafe_allow_html=True)
+
 
 # ===============================================================
 # TAB 1 — CMO DASHBOARD
