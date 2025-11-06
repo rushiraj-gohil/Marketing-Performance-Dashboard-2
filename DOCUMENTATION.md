@@ -4,7 +4,7 @@
 
 ## 1. Project Overview
 
-This documentation details the design and visual logic of the Marketing Performance Dashboard, which synthesizes actionable reporting for executive, CMO, and CFO stakeholders in an e-commerce context. The dashboard fulfills assignment requirements by delivering both business and technical clarity, and every major visual is justified with its rationale[1].
+This documentation details the design and visual logic of the Marketing Performance Dashboard, which synthesizes actionable reporting for executive, CMO, and CFO stakeholders in an e-commerce context. The dashboard fulfills assignment requirements by delivering both business and technical clarity, and every major visual is justified with its rationale.
 
 ***
 
@@ -13,7 +13,7 @@ This documentation details the design and visual logic of the Marketing Performa
 - **CMO:** Needs campaign performance, funnel, segment, and creative insights for growth.
 - **CFO:** Requires thorough visibility of spend, profit, cost efficiency, and ROI to guide investment.
 - **Executive:** Demands high-level summaries to prioritize action and investment.
-- Data is synthetically created to mimic true omnichannel marketing reality (across Meta, Google, Amazon, TikTok)[1][2].
+- Data is synthetically created to mimic true omnichannel marketing reality (across Meta, Google, Amazon, TikTok).
 
 ***
 
@@ -21,7 +21,7 @@ This documentation details the design and visual logic of the Marketing Performa
 
 - **Purpose:** To mirror real ad ecosystems in the absence of public multi-platform e-commerce datasets.
 - **Scope:** 120 days × 4 platforms × 5 campaigns × 4 regions × 3 devices × 3 audience segments × 4 objectives (~2,400 rows).
-- **Metrics:** All visualized KPIs (impressions, revenue, ROAS, CAC, conversions, profit, engagement, etc.) are computed to allow for multi-dimensional slicing[2].
+- **Metrics:** All visualized KPIs (impressions, revenue, ROAS, CAC, conversions, profit, engagement, etc.) are computed to allow for multi-dimensional slicing.
 
 ***
 
@@ -30,7 +30,7 @@ This documentation details the design and visual logic of the Marketing Performa
 ### Shared Features
 
 - **Universal Filters:** Platform, region, campaign objective, device, segment, and date range.  
-  *Rationale*: Ensures every stakeholder can target analytics to their exact context, maximizing decision relevance[1].
+  *Rationale*: Ensures every stakeholder can target analytics to their exact context, maximizing decision relevance.
 
 ***
 
@@ -119,7 +119,7 @@ This documentation details the design and visual logic of the Marketing Performa
   - *Rationale*: Highlights alignment (or mismatch) between where money is spent vs. where profit accrues. Drives optimization.
 
 - **Advanced Financial Metrics (Table):** Profit per Conversion, LTV/CAC, Payback Period, highlighted by gradient and with insight callout.
-  - *Rationale*: Moves CFO’s attention beyond averages to nuanced, segment-by-segment and market-by-market efficiency (e.g., identifying “hidden” pockets of ROI)[1].
+  - *Rationale*: Moves CFO’s attention beyond averages to nuanced, segment-by-segment and market-by-market efficiency (e.g., identifying “hidden” pockets of ROI).
 
 ***
 
@@ -128,7 +128,7 @@ This documentation details the design and visual logic of the Marketing Performa
 Every chart and table was purposefully chosen:
 - To map directly to a stakeholder’s core business objective (awareness, engagement, conversion, profit).
 - To allow information comparison, trend detection, or easy identification of actionable outliers.
-- To maximize interpretability and drive clear, data-backed next steps for each stakeholder independently[1].
+- To maximize interpretability and drive clear, data-backed next steps for each stakeholder independently.
 
 ***
 
