@@ -327,7 +327,9 @@ with tab_exec:
     
     st.plotly_chart(fig_radar, use_container_width=True)
     
-    # Key insights
+    # ===============================================================
+# KEY INSIGHTS (Dark + Light Mode Readable)
+# ===============================================================
 st.subheader("💡 Key Insights")
 
 best_platform = platform_metrics.sort_values('Profit($)', ascending=False).index[0]
@@ -337,21 +339,37 @@ best_roas = platform_metrics.loc[best_platform, 'ROAS']
 worst_platform = platform_metrics.sort_values('Profit($)', ascending=True).index[0]
 worst_profit = platform_metrics.loc[worst_platform, 'Profit($)']
 
+# Best-performing box (blue)
 st.markdown(f"""
-<div class="insight-box" style="background-color:rgba(33,150,243,0.15);color:var(--text-color,#fff);">
-<strong style="color:#00bcd4;">✅ Best Performing Platform:</strong> 
-<span style="color:inherit;">{best_platform} generated 
-<strong style="color:#00e676;">{format_large_number(best_profit)}</strong> in profit 
-with a ROAS of <strong style="color:#00e676;">{best_roas:.2f}x</strong>.</span>
+<div style="
+    background-color:#1e88e5;
+    color:#ffffff;
+    padding:14px 18px;
+    border-radius:10px;
+    border-left:5px solid #1565c0;
+    margin:8px 0;
+    font-size:15px;
+">
+<strong>✅ Best Performing Platform:</strong> 
+{best_platform} generated <strong>${best_profit:,.0f}</strong> in profit 
+with a ROAS of <strong>{best_roas:.2f}x</strong>.
 </div>
 """, unsafe_allow_html=True)
 
+# Underperforming box (amber)
 st.markdown(f"""
-<div class="warning-box" style="background-color:rgba(255,193,7,0.15);color:var(--text-color,#fff);">
-<strong style="color:#ffca28;">⚠️ Attention Required:</strong> 
-<span style="color:inherit;">{worst_platform} generated only 
-<strong style="color:#ff7043;">{format_large_number(worst_profit)}</strong> in profit. 
-Consider budget reallocation or campaign optimization.</span>
+<div style="
+    background-color:#ffb300;
+    color:#0d1117;
+    padding:14px 18px;
+    border-radius:10px;
+    border-left:5px solid #f57c00;
+    margin:8px 0;
+    font-size:15px;
+">
+<strong>⚠️ Attention Required:</strong> 
+{worst_platform} generated only <strong>${worst_profit:,.0f}</strong> in profit. 
+Consider budget reallocation or campaign optimization.
 </div>
 """, unsafe_allow_html=True)
 
